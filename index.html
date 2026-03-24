@@ -1576,7 +1576,13 @@ function eventoIgnorado(eventoId){return getIgnorados().includes(eventoId);}
 async function fetchICS(){
   const proxyUrl=getProxyUrl();
   if(!proxyUrl)throw new Error('URL_NAO_CONFIGURADA');
-  const res=await fetch(proxyUrl);
+  // Segue redirecionamentos e omite credenciais — necessário para GitHub Pages + Apps Script
+  const res=await fetch(proxyUrl, {
+    method: 'GET',
+    redirect: 'follow',
+    credentials: 'omit',
+    headers: { 'Accept': 'application/json' }
+  });
   if(!res.ok)throw new Error('HTTP '+res.status);
   const json=await res.json();
   if(!json.ok)throw new Error(json.error||'Erro no proxy');
