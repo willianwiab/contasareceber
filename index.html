@@ -701,8 +701,8 @@ tfoot td{background:#16a34a;color:white;font-weight:700;padding:13px 14px}
       <h3>🔍 Filtros do Fechamento</h3>
       <div class="fech-filtros-grid">
         <div class="fg"><label>Cliente</label><select id="fechCliente" onchange="renderFechamento()"><option value="">— Todos os clientes —</option></select></div>
-        <div class="fg"><label>Mês Inicial</label><select id="fechMesIni" onchange="renderFechamento()"></select></div>
-        <div class="fg"><label>Mês Final</label><select id="fechMesFim" onchange="renderFechamento()"></select></div>
+        <div class="fg"><label>Mês Inicial</label><select id="fechMesIni" onchange="atualizarClientesFechamento();renderFechamento()"></select></div>
+        <div class="fg"><label>Mês Final</label><select id="fechMesFim" onchange="atualizarClientesFechamento();renderFechamento()"></select></div>
         <div class="fg"><label>Exibir</label>
           <div class="fech-tipo-toggle">
             <button id="ftPend" class="on" onclick="setFechTipo('PENDENTE')">🔴 Pendentes</button>
@@ -1490,10 +1490,32 @@ function renderGeral(){
 function setFechTipo(t){fechTipoAtual=t;['ftPend','ftTodos','ftPago'].forEach(id=>document.getElementById(id).classList.remove('on'));document.getElementById(t==='PENDENTE'?'ftPend':t==='TODOS'?'ftTodos':'ftPago').classList.add('on');renderFechamento();}
 function initFechamento(){
   const meses=getMesesDisponiveis().filter(m=>todosOsDados.some(r=>r.mes===m));
-  const sIni=document.getElementById('fechMesIni'),sFim=document.getElementById('fechMesFim'),sCli=document.getElementById('fechCliente');
-  if(!sIni.options.length){meses.forEach(m=>{[sIni,sFim].forEach(s=>{const o=document.createElement('option');o.value=m;o.textContent=m;s.appendChild(o);});});sIni.value=mesAtual;sFim.value=mesAtual;}
-  if(sCli.options.length<=1){getTodosClientes().forEach(c=>{const o=document.createElement('option');o.value=c;o.textContent=c;sCli.appendChild(o);});}
+  const sIni=document.getElementById('fechMesIni'),sFim=document.getElementById('fechMesFim');
+  // Popular meses sempre (pode ter mudado)
+  [sIni,sFim].forEach(s=>{
+    const val=s.value;
+    s.innerHTML='';
+    meses.forEach(m=>{const o=document.createElement('option');o.value=m;o.textContent=m;s.appendChild(o);});
+    s.value=val&&meses.includes(val)?val:mesAtual;
+  });
+  atualizarClientesFechamento();
   renderFechamento();
+}
+
+function atualizarClientesFechamento(){
+  const mesIni=document.getElementById('fechMesIni')?.value||mesAtual;
+  const mesFim=document.getElementById('fechMesFim')?.value||mesAtual;
+  const mesesSel=getMesesDisponiveis().filter(m=>m>=mesIni&&m<=mesFim);
+  // Clientes que têm lançamento no período selecionado
+  const clientesPeriodo=[...new Set(
+    todosOsDados.filter(r=>mesesSel.includes(r.mes)&&Number(r.valorTotal)>0).map(r=>r.cliente)
+  )].sort();
+  const sCli=document.getElementById('fechCliente');
+  const valAtual=sCli.value;
+  sCli.innerHTML='<option value="">— Todos os clientes —</option>';
+  clientesPeriodo.forEach(c=>{const o=document.createElement('option');o.value=c;o.textContent=c;sCli.appendChild(o);});
+  // Mantém seleção se cliente ainda existe no período
+  if(valAtual&&clientesPeriodo.includes(valAtual))sCli.value=valAtual;
 }
 function getFechData(){
   const cliente=document.getElementById('fechCliente')?.value||'',mesIni=document.getElementById('fechMesIni')?.value||mesAtual,mesFim=document.getElementById('fechMesFim')?.value||mesAtual;
