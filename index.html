@@ -13,13 +13,7 @@ body{background:#f0fdf4;color:#1e293b}
 .header h1{font-size:1.4rem;font-weight:700}
 .header p{font-size:.85rem;opacity:.8;margin-top:2px}
 .header-right{display:flex;gap:10px;align-items:center;flex-wrap:wrap}
-/* Navegação de mês com setas */
-.mes-nav{display:flex;align-items:center;background:rgba(255,255,255,.15);border-radius:10px;overflow:hidden}
-.mes-nav-btn{border:none;background:transparent;color:white;font-size:1.15rem;padding:7px 13px;cursor:pointer;transition:background .2s;line-height:1;font-weight:700}
-.mes-nav-btn:hover{background:rgba(255,255,255,.28)}
-.mes-nav-btn:active{background:rgba(255,255,255,.4)}
-.mes-nav-label{font-size:.95rem;font-weight:700;color:white;padding:7px 16px;min-width:108px;text-align:center;letter-spacing:.04em;border-left:1px solid rgba(255,255,255,.2);border-right:1px solid rgba(255,255,255,.2)}
-select.mes-select{border:none;background:rgba(255,255,255,.15);color:white;padding:8px 14px;border-radius:8px;font-size:.9rem;cursor:pointer;outline:none;display:none}
+select.mes-select{border:none;background:rgba(255,255,255,.15);color:white;padding:8px 14px;border-radius:8px;font-size:.9rem;cursor:pointer;outline:none}
 select.mes-select option{color:#1e293b;background:white}
 .nav{background:white;border-bottom:1px solid #e5e7eb;display:flex;overflow-x:auto}
 .nav button{padding:14px 22px;border:none;background:none;cursor:pointer;font-size:.9rem;color:#6b7280;font-weight:500;border-bottom:3px solid transparent;white-space:nowrap;transition:all .2s}
@@ -130,14 +124,6 @@ tfoot td{background:#16a34a;color:white;font-weight:700;padding:13px 14px}
 .modal-actions{display:flex;gap:10px;justify-content:flex-end;margin-top:20px}
 .calc-preview{background:#f0fdf4;border:1px solid #bbf7d0;border-radius:8px;padding:10px 14px;font-size:.88rem;color:#15803d;font-weight:600;margin-top:8px;display:none}
 .calc-preview.show{display:block}
-/* Info de mês automático */
-.mes-auto-info{display:none;margin-top:6px;font-size:.78rem;font-weight:700;border-radius:6px;padding:5px 10px}
-.mes-auto-info.same{background:#f0fdf4;color:#16a34a;display:block}
-.mes-auto-info.diff{background:#fef9c3;color:#92400e;display:block}
-/* Selects de data inline */
-.data-selects{display:flex;gap:6px}
-.data-selects select{border:1px solid #e5e7eb;border-radius:8px;padding:9px 8px;font-size:.88rem;outline:none;cursor:pointer;background:white}
-.data-selects select:focus{border-color:#16a34a}
 .page{display:none}.page.active{display:block}
 .action-bar{display:flex;gap:10px;flex-wrap:wrap;align-items:center;margin-bottom:20px}
 .empty{text-align:center;padding:40px;color:#6b7280}
@@ -296,7 +282,7 @@ tfoot td{background:#16a34a;color:white;font-weight:700;padding:13px 14px}
   .clientes-grid,.clientes-page-grid,.mc-totais{grid-template-columns:1fr}
   .header{padding:14px 16px;gap:8px}.header h1{font-size:1.1rem}
   .header-right{gap:6px}
-  .mes-nav-label{min-width:80px;font-size:.82rem;padding:6px 10px}
+  select.mes-select{padding:6px 10px;font-size:.82rem}
   .nav{display:none}
   .container{padding:16px 12px 90px}
   .cards{grid-template-columns:repeat(2,1fr);gap:10px;margin-bottom:16px}
@@ -329,13 +315,6 @@ tfoot td{background:#16a34a;color:white;font-weight:700;padding:13px 14px}
   <div><h1>💰 Contas a Receber</h1><p id="headerSub">WEN Produtora</p></div>
   <div class="header-right">
     <span class="sync-bar" id="syncBar">⏳ Conectando...</span>
-    <!-- Navegação de mês com setas -->
-    <div class="mes-nav">
-      <button class="mes-nav-btn" onclick="navegarMes(-1)" title="Mês anterior">◀</button>
-      <span class="mes-nav-label" id="mesNavLabel">—</span>
-      <button class="mes-nav-btn" onclick="navegarMes(1)" title="Próximo mês">▶</button>
-    </div>
-    <!-- Select oculto mantido para compatibilidade interna -->
     <select class="mes-select" id="mesSelect" onchange="trocarMes(this.value)"></select>
     <button class="btn btn-white" id="btnNovoLanc">+ Novo Lançamento</button>
     <button class="btn btn-white" onclick="exportarExcel()">⬇ Excel</button>
@@ -475,8 +454,8 @@ tfoot td{background:#16a34a;color:white;font-weight:700;padding:13px 14px}
       <h3>🔍 Filtros do Fechamento</h3>
       <div class="fech-filtros-grid">
         <div class="fg"><label>Cliente</label><select id="fechCliente" onchange="renderFechamento()"><option value="">— Todos os clientes —</option></select></div>
-        <div class="fg"><label>Mês Inicial</label><select id="fechMesIni" onchange="atualizarClientesFechamento();renderFechamento()"></select></div>
-        <div class="fg"><label>Mês Final</label><select id="fechMesFim" onchange="atualizarClientesFechamento();renderFechamento()"></select></div>
+        <div class="fg"><label>Mês Inicial</label><select id="fechMesIni" onchange="renderFechamento()"></select></div>
+        <div class="fg"><label>Mês Final</label><select id="fechMesFim" onchange="renderFechamento()"></select></div>
         <div class="fg"><label>Exibir</label>
           <div class="fech-tipo-toggle">
             <button id="ftPend" class="on" onclick="setFechTipo('PENDENTE')">🔴 Pendentes</button>
@@ -490,21 +469,6 @@ tfoot td{background:#16a34a;color:white;font-weight:700;padding:13px 14px}
       <button class="btn btn-green" onclick="imprimirFechamento()">🖨️ Gerar PDF / Imprimir</button>
       <button class="btn btn-blue" onclick="copiarWhatsApp()">📱 Copiar para WhatsApp</button>
       <button class="btn btn-outline" onclick="exportarFechamentoExcel()">⬇ Exportar Excel</button>
-      <button class="btn" style="background:#7c3aed;color:white" onclick="gerarTextoNF()">📋 Texto para NF</button>
-    </div>
-
-    <!-- MODAL TEXTO NF -->
-    <div class="modal-bg" id="modalNFBg" style="z-index:110">
-      <div class="modal" style="max-width:600px">
-        <h2 style="color:#7c3aed">📋 Texto para Nota Fiscal</h2>
-        <div style="background:#f5f3ff;border:1px solid #ddd6fe;border-radius:10px;padding:16px;margin-bottom:16px">
-          <textarea id="nfTextoArea" rows="12" style="width:100%;border:none;background:transparent;font-size:.9rem;font-family:'Segoe UI',sans-serif;resize:vertical;outline:none;line-height:1.7;color:#1e293b"></textarea>
-        </div>
-        <div style="display:flex;gap:10px;justify-content:flex-end;flex-wrap:wrap">
-          <button class="btn btn-outline" onclick="document.getElementById('modalNFBg').classList.remove('open')">Fechar</button>
-          <button class="btn" style="background:#7c3aed;color:white" onclick="copiarTextoNF()">📋 Copiar Tudo</button>
-        </div>
-      </div>
     </div>
     <div class="fech-doc" id="fechDoc">
       <div class="fech-doc-header">
@@ -560,39 +524,8 @@ tfoot td{background:#16a34a;color:white;font-weight:700;padding:13px 14px}
   <div class="modal">
     <h2 id="modalTitle">➕ Novo Lançamento</h2>
     <div class="form-row">
-      <div class="form-group">
-        <label>Cliente *</label>
-        <input type="text" id="fCliente" placeholder="Ex: PANDA CAST" list="clientesList"/>
-        <datalist id="clientesList"></datalist>
-      </div>
-      <div class="form-group">
-        <label>📅 Data da Gravação</label>
-        <div class="data-selects">
-          <select id="fDia" style="flex:0.8">
-            <option value="">Dia</option>
-          </select>
-          <select id="fMes" onchange="atualizarMesDoFormulario()" style="flex:1.4">
-            <option value="">Mês</option>
-            <option value="01">Janeiro</option>
-            <option value="02">Fevereiro</option>
-            <option value="03">Março</option>
-            <option value="04">Abril</option>
-            <option value="05">Maio</option>
-            <option value="06">Junho</option>
-            <option value="07">Julho</option>
-            <option value="08">Agosto</option>
-            <option value="09">Setembro</option>
-            <option value="10">Outubro</option>
-            <option value="11">Novembro</option>
-            <option value="12">Dezembro</option>
-          </select>
-          <select id="fAno" onchange="atualizarMesDoFormulario()" style="flex:1">
-            <option value="">Ano</option>
-          </select>
-        </div>
-        <!-- Info automática do mês que será criado/usado -->
-        <div id="mesAutoInfo" style="display:none;margin-top:6px;font-size:.76rem;font-weight:700;border-radius:6px;padding:5px 10px"></div>
-      </div>
+      <div class="form-group"><label>Cliente *</label><input type="text" id="fCliente" placeholder="Ex: PANDA CAST" list="clientesList"/><datalist id="clientesList"></datalist></div>
+      <div class="form-group"><label>Data</label><input type="text" id="fData" placeholder="Ex: 03/02"/></div>
     </div>
     <div class="form-row3">
       <div class="form-group"><label>Horário</label><input type="text" id="fHorario" placeholder="10:00 AS 12:00"/></div>
@@ -696,6 +629,7 @@ const FIREBASE_PROJECT = 'wencontasapagar';
 const FIREBASE_API_KEY = 'AIzaSyC7hYN3__Q_4MNAu6VCTXbTdvVSW37IneI';
 const FS_URL = `https://firestore.googleapis.com/v1/projects/${FIREBASE_PROJECT}/databases/(default)/documents`;
 
+// Converte valor JS → Firestore
 function toFV(v){
   if(v===null||v===undefined)return{nullValue:null};
   if(typeof v==='boolean')return{booleanValue:v};
@@ -705,6 +639,7 @@ function toFV(v){
   if(typeof v==='object'){const f={};Object.keys(v).forEach(k=>f[k]=toFV(v[k]));return{mapValue:{fields:f}};}
   return{stringValue:String(v)};
 }
+// Converte campo Firestore → valor JS
 function fromFV(fv){
   if(!fv)return null;
   if('nullValue' in fv)return null;
@@ -717,14 +652,17 @@ function fromFV(fv){
   return null;
 }
 
+// Gera ID único string
 function gerarId(){return 'r'+Date.now()+Math.floor(Math.random()*9999);}
 
+// Status sync
 function setSyncStatus(st,msg){
   const el=document.getElementById('syncBar');
   const icons={saving:'⏳',ok:'☁️ ✅',error:'⚠️'};
   el.textContent=(icons[st]||'')+(msg?' '+msg.slice(0,40):'');
 }
 
+// Salvar lançamento no Firestore (doc por lançamento na coleção "lancamentos")
 async function fbSalvar(reg){
   const id=reg.id||gerarId();
   const r={...reg,id};
@@ -735,12 +673,14 @@ async function fbSalvar(reg){
   return r;
 }
 
+// Excluir lançamento
 async function fbExcluir(id){
   const url=`${FS_URL}/lancamentos/${id}?key=${FIREBASE_API_KEY}`;
   const res=await fetch(url,{method:'DELETE'});
   if(!res.ok)throw new Error('Erro ao excluir');
 }
 
+// Carregar todos os lançamentos (com paginação)
 async function fbCarregarTodos(){
   let todos=[];
   let pageToken=null;
@@ -764,10 +704,6 @@ async function fbCarregarTodos(){
 // ===== APP STATE =====
 const RECOR_KEY='wen_recorrentes_receber';
 const META_HORAS=100;
-// Meses em ordem para navegação
-const MESES_ABREV=['JAN','FEV','MAR','ABR','MAI','JUN','JUL','AGO','SET','OUT','NOV','DEZ'];
-const MESES_NOMES=['Janeiro','Fevereiro','Março','Abril','Maio','Junho','Julho','Agosto','Setembro','Outubro','Novembro','Dezembro'];
-
 let mesAtual='';
 let todosOsDados=[];
 let filtroAtual='TODOS';
@@ -780,11 +716,11 @@ let _geralEvolObj=null,_geralStudioObj=null,_geralTop20Obj=null;
 
 const fmt=v=>'R$ '+Number(v||0).toLocaleString('pt-BR',{minimumFractionDigits:2,maximumFractionDigits:2});
 const isPago=r=>Number(r.saldo)===0;
-function mesAtualReal(){const d=new Date();return MESES_ABREV[d.getMonth()]+'/'+d.getFullYear();}
+function mesAtualReal(){const n=['JAN','FEV','MAR','ABR','MAI','JUN','JUL','AGO','SET','OUT','NOV','DEZ'];const d=new Date();return n[d.getMonth()]+'/'+d.getFullYear();}
 function loading(show,txt='Carregando...'){document.getElementById('loadingTxt').textContent=txt;document.getElementById('loadingOverlay').classList.toggle('show',show);}
 function toast(msg,cor='#16a34a'){const t=document.getElementById('toast');t.textContent=msg;t.style.background=cor;t.classList.add('show');setTimeout(()=>t.classList.remove('show'),2800);}
 function getMesData(){return todosOsDados.filter(r=>r.mes===mesAtual);}
-function getMesesDisponiveis(){const s=new Set(todosOsDados.map(r=>r.mes).filter(Boolean));s.add(mesAtualReal());return[...s].sort((a,b)=>{const [ma,aa]=a.split('/');const [mb,ab]=b.split('/');const ya=parseInt(aa),yb=parseInt(ab);if(ya!==yb)return ya-yb;return MESES_ABREV.indexOf(ma)-MESES_ABREV.indexOf(mb);});}
+function getMesesDisponiveis(){const s=new Set(todosOsDados.map(r=>r.mes).filter(Boolean));s.add(mesAtualReal());return[...s].sort();}
 function getTodosClientes(){return[...new Set(todosOsDados.map(r=>r.cliente).filter(Boolean))].sort();}
 
 async function carregarTodos(){
@@ -823,86 +759,15 @@ function showPage(p,btn){
   if(p==='historico')renderHistorico();
 }
 
-// ===== NAVEGAÇÃO DE MÊS COM SETAS =====
 function renderMesSelect(){
   const sel=document.getElementById('mesSelect');
   const meses=getMesesDisponiveis();
   if(!mesAtual||!meses.includes(mesAtual))mesAtual=mesAtualReal();
   sel.innerHTML='';
   meses.forEach(m=>{const o=document.createElement('option');o.value=m;o.textContent=m;if(m===mesAtual)o.selected=true;sel.appendChild(o);});
-  // Atualiza o label das setas
-  document.getElementById('mesNavLabel').textContent=mesAtual;
   document.getElementById('headerSub').textContent='WEN Produtora — '+mesAtual;
 }
-
-function navegarMes(dir){
-  const partes=mesAtual.split('/');
-  let mi=MESES_ABREV.indexOf(partes[0]);
-  let ano=parseInt(partes[1]||new Date().getFullYear());
-  if(mi===-1)return;
-  mi+=dir;
-  if(mi<0){mi=11;ano--;}
-  if(mi>11){mi=0;ano++;}
-  const novoMes=MESES_ABREV[mi]+'/'+ano;
-  mesAtual=novoMes;
-  renderMesSelect();
-  renderDashboard();
-  renderTabela();
-}
-
-function trocarMes(m){
-  mesAtual=m;
-  document.getElementById('mesNavLabel').textContent=m;
-  document.getElementById('headerSub').textContent='WEN Produtora — '+m;
-  renderDashboard();
-  renderTabela();
-}
-
-// ===== SELECTS DE DATA NO FORMULÁRIO =====
-function popularSelectsDia(){
-  const sel=document.getElementById('fDia');
-  if(sel.options.length<32){
-    sel.innerHTML='<option value="">Dia</option>';
-    for(let i=1;i<=31;i++){
-      const o=document.createElement('option');
-      o.value=String(i).padStart(2,'0');
-      o.textContent=String(i).padStart(2,'0');
-      sel.appendChild(o);
-    }
-  }
-  const selAno=document.getElementById('fAno');
-  if(selAno.options.length<4){
-    selAno.innerHTML='<option value="">Ano</option>';
-    const anoAtual=new Date().getFullYear();
-    for(let a=anoAtual-1;a<=anoAtual+2;a++){
-      const o=document.createElement('option');
-      o.value=a;
-      o.textContent=a;
-      if(a===anoAtual)o.selected=true;
-      selAno.appendChild(o);
-    }
-  }
-}
-
-function atualizarMesDoFormulario(){
-  const mi=document.getElementById('fMes').value;
-  const ano=document.getElementById('fAno').value;
-  const info=document.getElementById('mesAutoInfo');
-  if(mi&&ano){
-    const mesAbrev=MESES_ABREV[parseInt(mi)-1];
-    const mesCalc=mesAbrev+'/'+ano;
-    const diferente=mesCalc!==mesAtual;
-    info.textContent=diferente
-      ? '⚠️ Lançando em: '+mesCalc+' (mês diferente do atual)'
-      : '✅ Lançando em: '+mesCalc;
-    info.style.display='block';
-    info.style.background=diferente?'#fef9c3':'#f0fdf4';
-    info.style.color=diferente?'#92400e':'#16a34a';
-    info.style.border=diferente?'1px solid #fde68a':'1px solid #bbf7d0';
-  }else{
-    info.style.display='none';
-  }
-}
+function trocarMes(m){mesAtual=m;document.getElementById('headerSub').textContent='WEN Produtora — '+mesAtual;renderDashboard();renderTabela();}
 
 // ---- DASHBOARD ----
 function renderDashboard(){
@@ -971,7 +836,7 @@ function renderTabela(){
       <td class="center"><button class="btn-acao" data-action="editar">✏️</button><button class="btn-acao del" data-action="excluir">🗑️</button>${!isPago(r)?`<button class="btn-parcial" data-action="parcial">💰 Parcial</button><button class="btn-receber" data-action="receber">✅ Quitar</button>`:'<span class="btn-receber pago">✅ Pago</span>'}</td>
     </tr>`;
   });
-  if(!rows)rows=`<tr><td colspan="8" class="empty">Nenhum lançamento em ${mesAtual}.<br><small style="color:#9ca3af">Use o botão "+ Novo Lançamento" para adicionar ou navegue entre meses com as setas ◀ ▶</small></td></tr>`;
+  if(!rows)rows='<tr><td colspan="8" class="empty">Nenhum lançamento.</td></tr>';
   const tH=data.reduce((a,r)=>a+Number(r.horas||0),0),tB=data.reduce((a,r)=>a+Number(r.valorTotal||0),0),tS=data.reduce((a,r)=>a+Number(r.saldo||0),0);
   document.getElementById('tabelaDiv').innerHTML=`<table><thead><tr><th>Cliente</th><th style="text-align:center">Data</th><th style="text-align:center">Horas</th><th style="text-align:right">Total</th><th style="text-align:right">Reserva</th><th style="text-align:right">Saldo</th><th style="text-align:center">Status</th><th style="text-align:center">Ações</th></tr></thead><tbody>${rows}</tbody><tfoot><tr><td colspan="2">TOTAL (${data.length})</td><td style="text-align:center">${tH}h</td><td style="text-align:right">${fmt(tB)}</td><td></td><td style="text-align:right">${fmt(tS)}</td><td colspan="2"></td></tr></tfoot></table>`;
 }
@@ -1117,87 +982,19 @@ function calcPreview(){
   if(t>0){const tk=h>0?t/h:0;p.innerHTML=`💰 Saldo: <b>${fmt(t-r)}</b>${tk>0?' · Ticket/h: <b>'+fmt(tk)+'</b>':''}`;p.classList.add('show');}else p.classList.remove('show');
 }
 function atualizarClientesList(){const todos=getTodosClientes();['clientesList','clientesList2'].forEach(id=>{const dl=document.getElementById(id);if(dl)dl.innerHTML=todos.map(c=>`<option value="${c}">`).join('');});}
-
 function abrirModal(id=null){
-  editandoId=id;
-  document.getElementById('modalTitle').textContent=id?'✏️ Editar Lançamento':'➕ Novo Lançamento';
-  atualizarClientesList();
-  popularSelectsDia();
-
-  if(id){
-    const r=todosOsDados.find(x=>String(x.id)===String(id));
-    if(!r){toast('Registro não encontrado','#ef4444');return;}
-    document.getElementById('fCliente').value=r.cliente;
-    document.getElementById('fHorario').value=r.horario||'';
-    document.getElementById('fStudio').value=r.studio||'STUDIO A';
-    document.getElementById('fHoras').value=r.horas;
-    document.getElementById('fValorTotal').value=r.valorTotal;
-    document.getElementById('fValorReserva').value=r.valorReserva;
-    document.getElementById('fDesc').value=r.desc||'';
-    document.getElementById('fObs').value=r.obs||'';
-    // Preenche dia/mês/ano a partir de r.data e r.mes
-    const partesMes=(r.mes||mesAtual).split('/');
-    const miAbrev=partesMes[0],anoR=partesMes[1];
-    const miNum=String(MESES_ABREV.indexOf(miAbrev)+1).padStart(2,'0');
-    const data=r.data||'-';
-    if(data&&data!=='-'){
-      const pts=data.split('/');
-      document.getElementById('fDia').value=pts[0]||'';
-    }else{
-      document.getElementById('fDia').value='';
-    }
-    document.getElementById('fMes').value=miNum;
-    document.getElementById('fAno').value=anoR||new Date().getFullYear();
-    atualizarMesDoFormulario();
-  }else{
-    // Novo lançamento: limpa campos
-    ['fCliente','fHorario','fHoras','fValorTotal','fValorReserva','fDesc','fObs'].forEach(x=>document.getElementById(x).value='');
-    document.getElementById('fDia').value='';
-    document.getElementById('fStudio').value='STUDIO A';
-    // Pré-seleciona mês/ano atual
-    const partesMes=mesAtual.split('/');
-    const miNum=String(MESES_ABREV.indexOf(partesMes[0])+1).padStart(2,'0');
-    document.getElementById('fMes').value=miNum;
-    document.getElementById('fAno').value=partesMes[1]||new Date().getFullYear();
-    atualizarMesDoFormulario();
-  }
-  document.getElementById('calcPreview').classList.remove('show');
-  document.getElementById('modalBg').classList.add('open');
+  editandoId=id;document.getElementById('modalTitle').textContent=id?'✏️ Editar Lançamento':'➕ Novo Lançamento';atualizarClientesList();
+  if(id){const r=todosOsDados.find(x=>String(x.id)===String(id));if(!r){toast('Registro não encontrado','#ef4444');return;}document.getElementById('fCliente').value=r.cliente;document.getElementById('fData').value=r.data;document.getElementById('fHorario').value=r.horario;document.getElementById('fStudio').value=r.studio;document.getElementById('fHoras').value=r.horas;document.getElementById('fValorTotal').value=r.valorTotal;document.getElementById('fValorReserva').value=r.valorReserva;document.getElementById('fDesc').value=r.desc;document.getElementById('fObs').value=r.obs;}
+  else{['fCliente','fData','fHorario','fHoras','fValorTotal','fValorReserva','fDesc','fObs'].forEach(x=>document.getElementById(x).value='');document.getElementById('fStudio').value='STUDIO A';}
+  document.getElementById('calcPreview').classList.remove('show');document.getElementById('modalBg').classList.add('open');
 }
-
 function fecharModal(){document.getElementById('modalBg').classList.remove('open');editandoId=null;}
 
 async function salvarLancamento(){
-  const cliente=document.getElementById('fCliente').value.trim().toUpperCase();
-  if(!cliente){toast('Informe o cliente.','#ef4444');return;}
-  const vt=parseFloat(document.getElementById('fValorTotal').value)||0;
-  const vr=parseFloat(document.getElementById('fValorReserva').value)||0;
-  // Calcula data e mês a partir dos selects
-  const dia=document.getElementById('fDia').value;
-  const mi=document.getElementById('fMes').value;
-  const ano=document.getElementById('fAno').value;
-  // Data no formato DD/MM
-  const dataFmt=dia&&mi?(dia+'/'+mi):'-';
-  // Mês no formato ABR/2025
-  let mesLanc=mesAtual;
-  if(mi&&ano){
-    mesLanc=MESES_ABREV[parseInt(mi)-1]+'/'+ano;
-  }
-  const base={
-    mes:mesLanc,
-    cliente,
-    data:dataFmt,
-    horario:document.getElementById('fHorario').value.trim()||'-',
-    studio:document.getElementById('fStudio').value,
-    horas:parseFloat(document.getElementById('fHoras').value)||0,
-    valorTotal:vt,
-    valorReserva:vr,
-    saldo:Math.max(0,vt-vr),
-    desc:document.getElementById('fDesc').value.trim(),
-    obs:document.getElementById('fObs').value.trim()
-  };
-  loading(true,editandoId?'Atualizando...':'Salvando...');
-  setSyncStatus('saving');
+  const cliente=document.getElementById('fCliente').value.trim().toUpperCase();if(!cliente){toast('Informe o cliente.','#ef4444');return;}
+  const vt=parseFloat(document.getElementById('fValorTotal').value)||0,vr=parseFloat(document.getElementById('fValorReserva').value)||0;
+  const base={mes:mesAtual,cliente,data:document.getElementById('fData').value.trim()||'-',horario:document.getElementById('fHorario').value.trim()||'-',studio:document.getElementById('fStudio').value,horas:parseFloat(document.getElementById('fHoras').value)||0,valorTotal:vt,valorReserva:vr,saldo:Math.max(0,vt-vr),desc:document.getElementById('fDesc').value.trim(),obs:document.getElementById('fObs').value.trim()};
+  loading(true,editandoId?'Atualizando...':'Salvando...');setSyncStatus('saving');
   try{
     if(editandoId){
       const salvo=await fbSalvar({...base,id:editandoId});
@@ -1208,21 +1005,10 @@ async function salvarLancamento(){
       const novoId=gerarId();
       const salvo=await fbSalvar({...base,id:novoId});
       todosOsDados.push(salvo);
-      toast('✅ Lançamento adicionado em '+mesLanc+'!');
+      toast('✅ Lançamento adicionado!');
     }
-    // Navega para o mês do lançamento automaticamente
-    if(mesLanc&&mesLanc!==mesAtual){
-      mesAtual=mesLanc;
-      renderMesSelect();
-    }
-    setSyncStatus('ok');
-    fecharModal();
-    renderTabela();
-    renderDashboard();
-  }catch(err){
-    setSyncStatus('error');
-    toast('Erro: '+err.message,'#ef4444');
-  }
+    setSyncStatus('ok');fecharModal();renderTabela();renderDashboard();
+  }catch(err){setSyncStatus('error');toast('Erro: '+err.message,'#ef4444');}
   finally{loading(false);}
 }
 
@@ -1318,29 +1104,10 @@ function setFechTipo(t){
 }
 function initFechamento(){
   const meses=getMesesDisponiveis().filter(m=>todosOsDados.some(r=>r.mes===m));
-  const sIni=document.getElementById('fechMesIni'),sFim=document.getElementById('fechMesFim');
-  // Repopula selects de mês sempre (pode ter novos meses)
-  const valIni=sIni.value,valFim=sFim.value;
-  [sIni,sFim].forEach(s=>{s.innerHTML='';meses.forEach(m=>{const o=document.createElement('option');o.value=m;o.textContent=m;s.appendChild(o);});});
-  sIni.value=meses.includes(valIni)?valIni:mesAtual;
-  sFim.value=meses.includes(valFim)?valFim:mesAtual;
-  atualizarClientesFechamento();
+  const sIni=document.getElementById('fechMesIni'),sFim=document.getElementById('fechMesFim'),sCli=document.getElementById('fechCliente');
+  if(!sIni.options.length){meses.forEach(m=>{[sIni,sFim].forEach(s=>{const o=document.createElement('option');o.value=m;o.textContent=m;s.appendChild(o);});});sIni.value=mesAtual;sFim.value=mesAtual;}
+  if(sCli.options.length<=1){getTodosClientes().forEach(c=>{const o=document.createElement('option');o.value=c;o.textContent=c;sCli.appendChild(o);});}
   renderFechamento();
-}
-function atualizarClientesFechamento(){
-  const mesIni=document.getElementById('fechMesIni')?.value||mesAtual;
-  const mesFim=document.getElementById('fechMesFim')?.value||mesAtual;
-  const mesesSel=getMesesDisponiveis().filter(m=>m>=mesIni&&m<=mesFim);
-  // Apenas clientes com lancamento no periodo selecionado
-  const clientesPeriodo=[...new Set(
-    todosOsDados.filter(r=>mesesSel.includes(r.mes)&&Number(r.valorTotal)>0).map(r=>r.cliente)
-  )].sort();
-  const sCli=document.getElementById('fechCliente');
-  const valAtual=sCli.value;
-  sCli.innerHTML='<option value="">— Todos os clientes —</option>';
-  clientesPeriodo.forEach(c=>{const o=document.createElement('option');o.value=c;o.textContent=c;sCli.appendChild(o);});
-  // Mantém selecao se cliente ainda existe no periodo, senao limpa
-  sCli.value=clientesPeriodo.includes(valAtual)?valAtual:'';
 }
 function getFechData(){
   const cliente=document.getElementById('fechCliente')?.value||'';
@@ -1367,11 +1134,13 @@ function renderFechamento(){
   if(!data.length){document.getElementById('fechCorpo').innerHTML='<div class="fech-empty">😊 Nenhum lançamento encontrado.</div>';document.getElementById('fechNota').innerHTML='';return;}
   const porMes={};data.forEach(r=>{if(!porMes[r.mes])porMes[r.mes]=[];porMes[r.mes].push(r);});
   const mostrarCliente=!cliente;
+  const meses3=['JAN','FEV','MAR','ABR','MAI','JUN','JUL','AGO','SET','OUT','NOV','DEZ'];
+  const mesesExtenso=['Janeiro','Fevereiro','Março','Abril','Maio','Junho','Julho','Agosto','Setembro','Outubro','Novembro','Dezembro'];
   let html='';
   Object.entries(porMes).sort(([a],[b])=>a.localeCompare(b)).forEach(([mes,regs])=>{
     const mT=regs.reduce((a,r)=>a+Number(r.valorTotal||0),0),mS=regs.reduce((a,r)=>a+Number(r.saldo||0),0),mR=regs.reduce((a,r)=>a+Number(r.valorReserva||0),0),mH=regs.reduce((a,r)=>a+Number(r.horas||0),0);
-    const [mn,ma]=mes.split('/');const idx=MESES_ABREV.indexOf(mn);
-    const mesExtenso=idx>-1?MESES_NOMES[idx]+' de '+ma:mes;
+    const [mn,ma]=mes.split('/');const idx=meses3.indexOf(mn);
+    const mesExtenso=idx>-1?mesesExtenso[idx]+' de '+ma:mes;
     html+=`<div class="fech-mes-bloco"><div class="fech-mes-titulo"><span class="mn">📅 ${mesExtenso}</span><span class="mt">${regs.length} grav. · ${mH}h · ${fmt(mT)}</span><span class="ms ${mS>0?'pend':'quitado'}">${mS>0?'🔴 '+fmt(mS)+' pendente':'✅ Quitado'}</span></div>
     <table class="fech-tbl"><thead><tr>${mostrarCliente?'<th>Cliente</th>':''}<th>Data</th><th>Horário</th><th>Studio</th><th class="r">Horas</th><th class="r">Total</th><th class="r">Recebido</th><th class="r">Saldo</th><th>Status</th></tr></thead><tbody>`;
     regs.forEach(r=>{
@@ -1397,9 +1166,10 @@ function copiarWhatsApp(){
   const tipoLabel=fechTipoAtual==='PENDENTE'?'PENDÊNCIAS':fechTipoAtual==='PAGO'?'PAGAMENTOS':'TODOS OS LANÇAMENTOS';
   let txt=`🎙️ *WEN PRODUTORA — FECHAMENTO*\n━━━━━━━━━━━━━━━━━━━━━━\n👤 Cliente: *${cliente||'Todos'}*\n📅 Período: *${periodo}*\n📋 Exibindo: *${tipoLabel}*\n━━━━━━━━━━━━━━━━━━━━━━\n\n`;
   const porMes={};data.forEach(r=>{if(!porMes[r.mes])porMes[r.mes]=[];porMes[r.mes].push(r);});
+  const meses3=['JAN','FEV','MAR','ABR','MAI','JUN','JUL','AGO','SET','OUT','NOV','DEZ'];
   Object.entries(porMes).sort(([a],[b])=>a.localeCompare(b)).forEach(([mes,regs])=>{
-    const [mn,ma]=mes.split('/');const idx=MESES_ABREV.indexOf(mn);
-    const mesNome=idx>-1?MESES_NOMES[idx]+'/'+ma:mes;
+    const [mn,ma]=mes.split('/');const idx=meses3.indexOf(mn);
+    const mesNome=idx>-1?['Janeiro','Fevereiro','Março','Abril','Maio','Junho','Julho','Agosto','Setembro','Outubro','Novembro','Dezembro'][idx]+'/'+ma:mes;
     const mS=regs.reduce((a,r)=>a+Number(r.saldo||0),0),mT=regs.reduce((a,r)=>a+Number(r.valorTotal||0),0);
     txt+=`📅 *${mesNome}*\n`;
     regs.forEach(r=>{txt+=`  • ${r.data||'-'}`;if(!cliente)txt+=` | *${r.cliente}*`;txt+=` | ${r.horas}h | ${fmt(r.valorTotal)}`;if(r.saldo>0)txt+=` | 🔴 *${fmt(r.saldo)}*`;else txt+=` | ✅`;if(r.horario&&r.horario!=='-')txt+=` | ${r.horario}`;txt+='\n';if(r.desc&&r.desc!=='-')txt+=`    📝 _${r.desc}_\n`;});
@@ -1421,91 +1191,6 @@ function exportarFechamentoExcel(){
   toast('⬇ Excel exportado!');
 }
 
-// ---- TEXTO NOTA FISCAL ----
-function gerarTextoNF(){
-  const cliente=document.getElementById('fechCliente')?.value||'';
-  const mesIni=document.getElementById('fechMesIni')?.value||mesAtual;
-  const mesFim=document.getElementById('fechMesFim')?.value||mesAtual;
-  const data=getFechData();
-  if(!data.length){toast('Nenhum dado para gerar NF.','#ef4444');return;}
-
-  const tH=data.reduce((a,r)=>a+Number(r.horas||0),0);
-  const tT=data.reduce((a,r)=>a+Number(r.valorTotal||0),0);
-  const periodo=mesIni===mesFim?mesIni:`${mesIni} a ${mesFim}`;
-
-  // Contagem de gravações por cliente (ou geral se todos)
-  const porCliente={};
-  data.forEach(r=>{
-    const c=r.cliente||'?';
-    if(!porCliente[c])porCliente[c]={gravacoes:0,horas:0,valor:0};
-    porCliente[c].gravacoes++;
-    porCliente[c].horas+=Number(r.horas||0);
-    porCliente[c].valor+=Number(r.valorTotal||0);
-  });
-
-  // Monta descrição dos serviços
-  let descServico='';
-  const clientes=Object.entries(porCliente);
-  const totalGravacoes=data.length;
-
-  if(clientes.length===1){
-    // Um cliente único — detalha os episódios
-    const [nome,info]=clientes[0];
-    const gravPalavra=info.gravacoes===1?'gravação':'gravações';
-    const diariasPalavra=info.gravacoes===1?'diária':'diárias';
-    descServico=`Prestação de serviços de produção audiovisual — Gravação de ${info.gravacoes} episódio${info.gravacoes>1?'s':''} de videocast.\n${info.gravacoes} ${diariasPalavra} totalizando ${info.horas}h de estúdio.\nPeríodo: ${periodo}.`;
-  } else {
-    // Múltiplos clientes
-    const diariasPalavra=totalGravacoes===1?'diária':'diárias';
-    descServico=`Prestação de serviços de produção audiovisual — Gravações de videocast.\n${totalGravacoes} ${diariasPalavra} totalizando ${tH}h de estúdio.\nPeríodo: ${periodo}.`;
-    if(clientes.length<=6){
-      descServico+='\n\nDetalhamento:';
-      clientes.forEach(([nome,info])=>{
-        const dP=info.gravacoes===1?'diária':'diárias';
-        descServico+=`\n• ${nome}: ${info.gravacoes} ${dP} — ${info.horas}h`;
-      });
-    }
-  }
-
-  // Valor formatado
-  const valorFmt=tT.toLocaleString('pt-BR',{minimumFractionDigits:2,maximumFractionDigits:2});
-
-  // Monta texto final
-  const texto=
-`───────────────────────────
-📄 DESCRIÇÃO PARA NOTA FISCAL
-───────────────────────────
-${descServico}
-
-Valor total: R$ ${valorFmt}
-───────────────────────────
-🏦 DADOS BANCÁRIOS — WEN PRODUTORA
-───────────────────────────
-Razão Social: WEN PRODUTORA LTDA
-CNPJ: 21.577.617/0001-44
-
-PIX: wenprodutora@gmail.com
-
-Banco: Caixa Econômica Federal
-Agência: 1601
-Conta Corrente: 1292 000577674871-9
-───────────────────────────`;
-
-  document.getElementById('nfTextoArea').value=texto;
-  document.getElementById('modalNFBg').classList.add('open');
-}
-
-function copiarTextoNF(){
-  const txt=document.getElementById('nfTextoArea').value;
-  navigator.clipboard.writeText(txt)
-    .then(()=>toast('📋 Texto copiado!','#7c3aed'))
-    .catch(()=>{
-      const ta=document.getElementById('nfTextoArea');
-      ta.select();document.execCommand('copy');
-      toast('📋 Texto copiado!','#7c3aed');
-    });
-}
-
 // ---- BACKUP ----
 function fazerBackup(){
   const blob=new Blob([JSON.stringify({registros:todosOsDados},null,2)],{type:'application/json'});
@@ -1524,7 +1209,11 @@ async function importarBackup(input){
       if(!registros.length){document.getElementById('backupStatus').innerHTML='<span style="color:#ef4444">❌ Nenhum registro.</span>';return;}
       if(!confirm(`Restaurar ${registros.length} registros? Os dados atuais serão substituídos.`))return;
       loading(true,'Enviando ao Firebase...');setSyncStatus('saving');
-      for(const r of registros){if(!r.id)r.id=gerarId();await fbSalvar(r);}
+      // Garante IDs únicos
+      for(const r of registros){
+        if(!r.id)r.id=gerarId();
+        await fbSalvar(r);
+      }
       todosOsDados=registros;
       setSyncStatus('ok');
       renderMesSelect();renderDashboard();
@@ -1567,7 +1256,6 @@ document.getElementById('modalBg').addEventListener('click',e=>{if(e.target===do
 document.getElementById('modalClienteBg').addEventListener('click',e=>{if(e.target===document.getElementById('modalClienteBg'))fecharModalCliente();});
 document.getElementById('modalConfirmBg').addEventListener('click',e=>{if(e.target===document.getElementById('modalConfirmBg')){_ridParaExcluir=null;document.getElementById('modalConfirmBg').classList.remove('open');}});
 document.getElementById('modalRecorBg').addEventListener('click',e=>{if(e.target===document.getElementById('modalRecorBg'))fecharModalRecor();});
-document.getElementById('modalNFBg').addEventListener('click',e=>{if(e.target===document.getElementById('modalNFBg'))document.getElementById('modalNFBg').classList.remove('open');});
 
 // ---- INIT ----
 mesAtual=mesAtualReal();
