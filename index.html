@@ -716,21 +716,6 @@ tfoot td{background:#16a34a;color:white;font-weight:700;padding:13px 14px}
       <button class="btn btn-green" onclick="imprimirFechamento()">🖨️ Gerar PDF / Imprimir</button>
       <button class="btn btn-blue" onclick="copiarWhatsApp()">📱 Copiar para WhatsApp</button>
       <button class="btn btn-outline" onclick="exportarFechamentoExcel()">⬇ Exportar Excel</button>
-      <button class="btn" style="background:#7c3aed;color:white" onclick="gerarTextoNF()">📋 Texto para NF</button>
-    </div>
-
-    <!-- MODAL TEXTO NF -->
-    <div class="modal-bg" id="modalNFBg" style="z-index:110">
-      <div class="modal" style="max-width:600px">
-        <h2 style="color:#7c3aed">📋 Texto para Nota Fiscal</h2>
-        <div style="background:#f5f3ff;border:1px solid #ddd6fe;border-radius:10px;padding:16px;margin-bottom:16px">
-          <textarea id="nfTextoArea" rows="12" style="width:100%;border:none;background:transparent;font-size:.9rem;font-family:'Segoe UI',sans-serif;resize:vertical;outline:none;line-height:1.7;color:#1e293b"></textarea>
-        </div>
-        <div style="display:flex;gap:10px;justify-content:flex-end;flex-wrap:wrap">
-          <button class="btn btn-outline" onclick="document.getElementById('modalNFBg').classList.remove('open')">Fechar</button>
-          <button class="btn" style="background:#7c3aed;color:white" onclick="copiarTextoNF()">📋 Copiar Tudo</button>
-        </div>
-      </div>
     </div>
     <div class="fech-doc" id="fechDoc">
       <div class="fech-doc-header">
@@ -960,6 +945,77 @@ async function fbCarregarTodos(){
   return todos;
 }
 
+// ===== FIREBASE — AGENDA CONCILIADOS =====
+const CONCIL_COL = 'agenda_conciliados';
+
+async function fbSalvarConciliado(eventoId, dados) {
+  const fields = {};
+  const obj = { id: eventoId, ...dados, ts: new Date().toISOString() };
+  Object.keys(obj).forEach(k => fields[k] = toFV(obj[k]));
+  const url = `${FS_URL}/${CONCIL_COL}/${encodeURIComponent(eventoId)}?key=${FIREBASE_API_KEY}`;
+  const res = await fetch(url, { method: 'PATCH', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ fields }) });
+  if (!res.ok) throw new Error('Erro ao salvar conciliado: ' + res.statusText);
+}
+
+async function fbCarregarConciliados() {
+  let todos = [], pageToken = null;
+  do {
+    let url = `${FS_URL}/${CONCIL_COL}?key=${FIREBASE_API_KEY}&pageSize=300`;
+    if (pageToken) url += '&pageToken=' + pageToken;
+    const res = await fetch(url);
+    const json = await res.json();
+    if (json.documents) {
+      json.documents.forEach(doc => {
+        const fields = doc.fields || {};
+        const obj = {};
+        Object.keys(fields).forEach(k => obj[k] = fromFV(fields[k]));
+        todos.push(obj);
+      });
+    }
+    pageToken = json.nextPageToken || null;
+  } while (pageToken);
+  return todos;
+}
+
+async function fbRemoverConciliado(eventoId) {
+  const url = `${FS_URL}/${CONCIL_COL}/${encodeURIComponent(eventoId)}?key=${FIREBASE_API_KEY}`;
+  await fetch(url, { method: 'DELETE' });
+}
+
+// Cache in-memory dos conciliados
+let _conciliados = {}; // { eventoId: { cliente, mes, lancamentoId, ... } }
+
+async function carregarConciliados() {
+  try {
+    const lista = await fbCarregarConciliados();
+    _conciliados = {};
+    lista.forEach(c => { if (c.id) _conciliados[c.id] = c; });
+    console.log('✅ Conciliados carregados:', Object.keys(_conciliados).length);
+  } catch(e) {
+    console.warn('⚠️ Erro ao carregar conciliados:', e.message);
+  }
+}
+
+function eventoConciliado(eventoId) {
+  // 1. Tem registro no Firebase (conciliados)
+  if (_conciliados[eventoId]) return true;
+  // 2. Tem lançamento vinculado diretamente pelo googleEventId
+  if (eventoTemLancamento(eventoId)) return true;
+  return false;
+}
+
+async function marcarConciliado(eventoId, dados) {
+  _conciliados[eventoId] = { id: eventoId, ...dados };
+  await fbSalvarConciliado(eventoId, dados);
+  // Remove do localStorage também para não duplicar
+  removerIgnoradoLocal(eventoId);
+}
+
+function removerIgnoradoLocal(eventoId) {
+  const lista = getIgnorados().filter(x => x !== eventoId);
+  localStorage.setItem(ICS_IGNORADOS_KEY, JSON.stringify(lista));
+}
+
 // ===== STATE =====
 const RECOR_KEY='wen_recorrentes_receber';
 
@@ -1005,7 +1061,11 @@ function clienteBadges(nome){
 async function carregarTodos(){
   loading(true,'Carregando do Firebase...');setSyncStatus('saving');
   try{
-    todosOsDados=await fbCarregarTodos();
+    // Carrega lançamentos e conciliados em paralelo
+    [todosOsDados] = await Promise.all([
+      fbCarregarTodos(),
+      carregarConciliados()
+    ]);
     setSyncStatus('ok');
     toast('☁️ '+todosOsDados.length+' registros carregados!');
     // Reprocessa notificações agora que os dados estão completos
@@ -1427,9 +1487,17 @@ async function salvarLancamento(){
     else{const novoId=gerarId();const salvo=await fbSalvar({...base,id:novoId});todosOsDados.push(salvo);toast('✅ Lançamento adicionado em '+mesLanc+'!');}
     if(mesLanc&&mesLanc!==mesAtual){mesAtual=mesLanc;renderMesSelect();}
     setSyncStatus('ok');fecharModal();renderTabela();renderDashboard();
-    // Se veio da agenda, ignora o evento (some da lista)
-    if(window._pendingIgnorarEventoId){ignorarEvento(window._pendingIgnorarEventoId);window._pendingIgnorarEventoId=null;}
-    else renderAgendaWidget();
+    // Se veio da agenda, registra como conciliado no Firebase pelo googleEventId
+    if(_pendingGoogleEventId){
+      await marcarConciliado(_pendingGoogleEventId, {
+        cliente: base.cliente,
+        mes: base.mes,
+        data: base.data,
+        acao:'lancado',
+        lancadoEm: new Date().toLocaleDateString('pt-BR')
+      });
+    }
+    renderAgendaWidget();
   }catch(err){setSyncStatus('error');toast('Erro: '+err.message,'#ef4444');}finally{loading(false);}
 }
 
@@ -1612,7 +1680,6 @@ function gerarTextoNF(){
   const tH=data.reduce((a,r)=>a+Number(r.horas||0),0);
   const tT=data.reduce((a,r)=>a+Number(r.valorTotal||0),0);
   const periodo=mesIni===mesFim?mesIni:`${mesIni} a ${mesFim}`;
-  // Agrupa por cliente
   const porCliente={};
   data.forEach(r=>{
     const c=r.cliente||'?';
@@ -1726,18 +1793,27 @@ function chaveIgnorado(ev){return (ev.titulo||'')+'||'+(ev.mes||'');}
 
 function ignorarEvento(eventoId){
   const ev=agendaEventos.find(e=>e.id===eventoId);
-  const lista=getIgnorados();
-  // Salva tanto o ID quanto a chave titulo+mes
-  const chave=ev?chaveIgnorado(ev):eventoId;
-  if(!lista.includes(eventoId))lista.push(eventoId);
-  if(ev&&!lista.includes(chave))lista.push(chave);
-  localStorage.setItem(ICS_IGNORADOS_KEY,JSON.stringify(lista));
+  // Salva no Firebase permanentemente
+  const dados={
+    cliente: ev?ev.titulo:'',
+    mes: ev?ev.mes:'',
+    data: ev?ev.data:'',
+    acao:'ignorado',
+    ignoradoEm: new Date().toLocaleDateString('pt-BR')
+  };
+  marcarConciliado(eventoId, dados)
+    .then(()=>toast('🗑️ Evento ignorado (salvo permanentemente)','#6b7280'))
+    .catch(e=>toast('Erro ao salvar: '+e.message,'#ef4444'));
   renderAgendaWidget();
 }
 
 function eventoIgnorado(ev){
+  // 1. Registro permanente no Firebase
+  if(_conciliados[ev.id]) return true;
+  // 2. Tem lançamento vinculado
+  if(eventoTemLancamento(ev.id)) return true;
+  // 3. Ignorado localmente (localStorage — fallback legado)
   const lista=getIgnorados();
-  // Verifica por ID ou por titulo+mes
   return lista.includes(ev.id)||lista.includes(chaveIgnorado(ev));
 }
 
@@ -1832,10 +1908,12 @@ function renderAgendaWidget(){
   const lista=document.getElementById('agendaLista');
   if(!agendaCarregada)return;
   let eventos=agendaEventos;
-  // Sempre remove ignorados e já lançados (quando filtro = todos ou nao_sinc)
-  const ignorados=getIgnorados();
-  eventos=eventos.filter(ev=>!eventoIgnorado(ev)&&!eventoTemLancamento(ev.id));
-  if(agendaFiltroAtual==='sinc')eventos=agendaEventos.filter(ev=>eventoTemLancamento(ev.id));
+  // Filtra: remove conciliados (Firebase + googleEventId) exceto no filtro 'sinc'
+  if(agendaFiltroAtual==='sinc'){
+    eventos=agendaEventos.filter(ev=>eventoTemLancamento(ev.id)||(_conciliados[ev.id]&&_conciliados[ev.id].acao==='lancado'));
+  } else {
+    eventos=eventos.filter(ev=>!eventoConciliado(ev.id));
+  }
   if(!eventos.length){lista.innerHTML='<div class="agenda-vazio">✅ Nenhum evento encontrado com este filtro.</div>';return;}
   const porMes={};
   eventos.forEach(ev=>{if(!porMes[ev.mes])porMes[ev.mes]=[];porMes[ev.mes].push(ev);});
@@ -1884,8 +1962,6 @@ function criarLancamentoDeEvento(eventoId){
   mesAtual=MESES_ABREV[inicio.getMonth()]+'/'+ano;renderMesSelect();
   atualizarClientesList();popularSelectsDia();
   editandoId=null;_pendingGoogleEventId=eventoId;
-  // Marca como ignorado para sumir da lista após salvar
-  window._pendingIgnorarEventoId=eventoId;
   document.getElementById('modalTitle').textContent='➕ Novo Lançamento (da Agenda)';
   document.getElementById('fCliente').value=ev.titulo.toUpperCase();
   document.getElementById('fHorario').value=`${hora} AS ${horaFim}`;
@@ -1946,14 +2022,21 @@ function renderConciliacao(){
   let lancamentosManuais=todosOsDados.filter(r=>!r.googleEventId&&r.valorTotal>0);
   if(mesSel!=='TODOS')lancamentosManuais=lancamentosManuais.filter(r=>r.mes===mesSel);
 
-  // IDs dos eventos que têm lançamento
+  // IDs dos eventos que têm lançamento via googleEventId
   const idsComLanc=new Set(lancamentos.map(r=>r.googleEventId));
 
-  // 1. Eventos OK — têm lançamento vinculado
-  const eventosOK=eventosAgenda.filter(ev=>idsComLanc.has(ev.id));
+  // 1. Eventos OK — têm lançamento vinculado OU estão marcados como conciliados no Firebase
+  const eventosOK=eventosAgenda.filter(ev=>
+    idsComLanc.has(ev.id) ||
+    (_conciliados[ev.id] && _conciliados[ev.id].acao==='lancado')
+  );
 
-  // 2. Eventos sem lançamento (e não ignorados)
-  const eventosSemLanc=eventosAgenda.filter(ev=>!idsComLanc.has(ev.id)&&!eventoIgnorado(ev));
+  // 2. Eventos sem lançamento (não conciliados, não ignorados)
+  const eventosSemLanc=eventosAgenda.filter(ev=>
+    !idsComLanc.has(ev.id) &&
+    !(_conciliados[ev.id]) &&
+    !eventoIgnorado(ev)
+  );
 
   // 3. Lançamentos cujo evento sumiu da agenda (cancelados)
   const idsAgenda=new Set(agendaEventos.map(ev=>ev.id));
@@ -2045,15 +2128,21 @@ function renderConciliacao(){
       <div class="concil-grupo-titulo ok">✅ Conciliados (${eventosOK.length})</div>
       ${eventosOK.map(ev=>{
         const lanc=todosOsDados.find(r=>r.googleEventId===ev.id);
+        const concilInfo=_conciliados[ev.id];
         const inicio=new Date(ev.inicio),fim=new Date(ev.fim);
         const durH=Math.round((fim-inicio)/3600000*10)/10;
+        const idEsc=ev.id.replace(/'/g,"\'");
+        const detalhe=lanc
+          ?`📅 ${ev.data} · ${durH}h agenda · ${lanc.horas}h sistema · ${fmt(lanc.valorTotal)} · ${isPago(lanc)?'✅ Recebido':'🔴 Pendente'}`
+          :`📅 ${ev.data} · Conciliado em ${concilInfo?.lancadoEm||concilInfo?.ignoradoEm||'—'}`;
         return`<div class="concil-item ok">
           <span class="concil-item-icon">✅</span>
           <div class="concil-item-info">
-            <div class="concil-item-nome">👤 ${ev.titulo}</div>
-            <div class="concil-item-detalhe">📅 ${ev.data} · ${durH}h agenda · ${lanc?lanc.horas+'h sistema':''} · ${lanc?fmt(lanc.valorTotal):''} · ${lanc&&isPago(lanc)?'✅ Recebido':'🔴 Pendente'}</div>
+            <div class="concil-item-nome">👤 ${lanc?lanc.cliente:ev.titulo}${concilInfo?.acao==='ignorado'?' <span style="font-size:.7rem;background:#f1f5f9;color:#6b7280;padding:1px 6px;border-radius:4px;margin-left:4px">ignorado</span>':''}</div>
+            <div class="concil-item-detalhe">${detalhe}</div>
           </div>
           <span class="concil-item-status" style="background:#dcfce7;color:#15803d">OK</span>
+          <button class="concil-item-acao" style="background:#f1f5f9;color:#6b7280;font-size:.7rem" onclick="desconciliarEvento('${idEsc}')" title="Desfazer">↩️</button>
         </div>`;
       }).join('')}
     </div>`;
@@ -2077,6 +2166,21 @@ function renderConciliacao(){
 
   if(!html)html='<div class="concil-vazio">✅ Tudo conciliado! Nenhuma divergência encontrada.</div>';
   document.getElementById('concilCorpo').innerHTML=html;
+}
+
+// ===== DESCONCILIAR — desfaz um registro do Firebase =====
+async function desconciliarEvento(eventoId){
+  if(!confirm('Desfazer conciliação? O evento voltará a aparecer na lista.'))return;
+  try{
+    await fbRemoverConciliado(eventoId);
+    delete _conciliados[eventoId];
+    removerIgnoradoLocal(eventoId);
+    toast('↩️ Conciliação desfeita — evento voltará à lista','#6b7280');
+    renderAgendaWidget();
+    if(concilAberto)renderConciliacao();
+  }catch(e){
+    toast('Erro: '+e.message,'#ef4444');
+  }
 }
 
 // ===== SININHO NOTIFICAÇÕES =====
@@ -2186,7 +2290,6 @@ document.getElementById('modalBg').addEventListener('click',e=>{if(e.target===do
 document.getElementById('modalClienteBg').addEventListener('click',e=>{if(e.target===document.getElementById('modalClienteBg'))fecharModalCliente();});
 document.getElementById('modalConfirmBg').addEventListener('click',e=>{if(e.target===document.getElementById('modalConfirmBg')){_ridParaExcluir=null;document.getElementById('modalConfirmBg').classList.remove('open');}});
 document.getElementById('modalRecorBg').addEventListener('click',e=>{if(e.target===document.getElementById('modalRecorBg'))fecharModalRecor();});
-document.getElementById('modalNFBg').addEventListener('click',e=>{if(e.target===document.getElementById('modalNFBg'))document.getElementById('modalNFBg').classList.remove('open');});
 
 // ===== INIT =====
 mesAtual=mesAtualReal();
